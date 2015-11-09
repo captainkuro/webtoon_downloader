@@ -17,7 +17,6 @@ echo "\n";
 $request = new Request();
 $opts = array(
 	CURLOPT_HTTPHEADER => array(
-		'Cache-Control: no-cache',
 		'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36',
 		'Accept-Language: en-US,en;q=0.8'
 	),
@@ -83,19 +82,11 @@ $chapter_url_pattern = str_replace("episode_no=$chapter_max", "episode_no=:CHAPT
 
 echo "$text\n";
 echo str_repeat('-', strlen($text))."\n";
-echo "Chapter [1-$chapter_max]: ";
-$chapter = trim(fgets(STDIN));
+echo "Chapters [1-$chapter_max]: ";
+$chapter_input = trim(fgets(STDIN));
 echo "\n";
 
 // Parse chapter
-if ($chapter < 1 || $chapter > $chapter_max) {
-	echo "That chapter doesn't exist\n";
-	exit;
-}
-$chapter_url = str_replace(':CHAPTER:', $chapter, $chapter_url_pattern);
-$chapter_resp = $request->get($chapter_url, array(), $opts);
-$chapter_dom = new Crawler($chapter_resp->getContent());
-
 function download_image($url, $save_to) {
 	global $opts;
 
@@ -113,24 +104,41 @@ function download_image($url, $save_to) {
 	fclose($fp);
 }
 
-$images = $chapter_dom->filter('#_imageList img');
-$total = $images->count();
-echo "Total Image: $total\n";
-echo "Downloading: ";
-$images->each(function ($img, $i) use ($text, $chapter) {
-	$id = $i+1;
-	echo "$id.";
-	$image_url = $img->attr('data-url');
-	$chapter_dir = str_pad($chapter, 3, 0, STR_PAD_LEFT);
-	$download_dir = "download/$text/$chapter_dir/";
-	if (!is_dir($download_dir)) mkdir($download_dir, 0777, true);
-	
-	if (preg_match('#\.(\w{3})\?#', $image_url, $matches)) {
-		$ext = $matches[1];
-	} else {
-		$ext = 'jpg';
+if (preg_match('#^(\d+)-(\d+)$#', $chapter_input, $matches)) {
+	$chapter_start = $matches[1];
+	$chapter_end = $matches[2];
+} else {
+	$chapter_start = $chapter_end = $chapter_input;
+}
+
+for ($chapter = $chapter_start; $chapter <= $chapter_end; $chapter++) {
+	if ($chapter < 1 || $chapter > $chapter_max) {
+		echo "That chapter doesn't exist\n";
+		exit;
 	}
-	$filename = str_pad($id, 3, 0, STR_PAD_LEFT).'.'.$ext;
-	download_image($image_url, $download_dir.$filename);
-});
-echo "Done!\n";
+	$chapter_url = str_replace(':CHAPTER:', $chapter, $chapter_url_pattern);
+	$chapter_resp = $request->get($chapter_url, array(), $opts);
+	$chapter_dom = new Crawler($chapter_resp->getContent());
+
+	$images = $chapter_dom->filter('#_imageList img');
+	$total = $images->count();
+	echo "Total Image in chapter $chapter: $total\n";
+	echo "Downloading: ";
+	$images->each(function ($img, $i) use ($text, $chapter) {
+		$id = $i+1;
+		echo "$id.";
+		$image_url = $img->attr('data-url');
+		$chapter_dir = str_pad($chapter, 3, 0, STR_PAD_LEFT);
+		$download_dir = "download/$text/$chapter_dir/";
+		if (!is_dir($download_dir)) mkdir($download_dir, 0777, true);
+		
+		if (preg_match('#\.(\w{3})\?#', $image_url, $matches)) {
+			$ext = $matches[1];
+		} else {
+			$ext = 'jpg';
+		}
+		$filename = str_pad($id, 3, 0, STR_PAD_LEFT).'.'.$ext;
+		download_image($image_url, $download_dir.$filename);
+	});
+	echo "Done!\n";
+}
