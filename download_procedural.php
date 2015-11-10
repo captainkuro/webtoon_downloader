@@ -15,14 +15,7 @@ echo "\n";
 
 // Global
 $request = new Request();
-$opts = array(
-	CURLOPT_HTTPHEADER => array(
-		'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36',
-		'Accept-Language: en-US,en;q=0.8'
-	),
-	CURLOPT_COOKIE => 'contentLanguage=id;locale=in',
-	CURLOPT_FOLLOWLOCATION => 1,
-);
+$opts = Config::$opts;
 
 // Parse search
 $search_url = "http://www.webtoons.com/search?keyword=$search";
@@ -54,6 +47,8 @@ echo "--------------\n";
 foreach ($result as $i => list($text, $url)) {
 	$head = $request->get($url, array(), array(CURLOPT_CUSTOMREQUEST => 'HEAD', CURLOPT_NOBODY => 1, CURLOPT_FOLLOWLOCATION => 1));
 	if ($head->getHttpCode() == 200) {
+		echo "$i > $text\n";
+	} else if ($head->getHeader()->getLocation()) {
 		echo "$i > $text\n";
 	} else {
 		unset($result[$i]);

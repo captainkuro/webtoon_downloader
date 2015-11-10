@@ -27,7 +27,7 @@ class Page_Comic {
 
 	public function isAvailable() {
 		$head = $this->request->get($this->url, array(), array(CURLOPT_CUSTOMREQUEST => 'HEAD', CURLOPT_NOBODY => 1, CURLOPT_FOLLOWLOCATION => 1));
-		return($head->getHttpCode() == 200);
+		return ($head->getHttpCode() == 200) || ($head->getHeader()->getLocation());
 	}
 
 	private function fetchInformation() {
