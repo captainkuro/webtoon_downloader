@@ -18,7 +18,7 @@ $request = new Request();
 $opts = Config::$opts;
 
 // Parse search
-$search_url = "http://www.webtoons.com/search?keyword=$search";
+$search_url = Config::$baseurl."/search?keyword=$search";
 $search_resp = $request->get($search_url, array(), $opts);
 $search_dom = new Crawler($search_resp->getContent());
 
@@ -32,13 +32,13 @@ $result = array();
 $search_dom->filter(".search .card_lst li a")->each(function ($a) {
 	global $result;
 	$text = $a->filter('.subj')->text();
-	$url = "http://www.webtoons.com".$a->attr('href');
+	$url = Config::$baseurl.$a->attr('href');
 	$result[] = array($text, $url);
 });
 $search_dom->filter(".search .challenge_lst li a")->each(function ($a) {
 	global $result;
 	$text = $a->filter('.subj')->text();
-	$url = "http://www.webtoons.com".$a->attr('href');
+	$url = Config::$baseurl.$a->attr('href');
 	$result[] = array($text, $url);
 });
 
@@ -75,6 +75,7 @@ $comic_dom = new Crawler($comic_resp->getContent());
 $last_chapter = $comic_dom->filter('#_listUl a')->first();
 $chapter_max = str_replace('#', '', $last_chapter->filter('.tx')->text());
 $chapter_url_pattern = str_replace("episode_no=$chapter_max", "episode_no=:CHAPTER:", $last_chapter->attr('href'));
+$chapter_url_pattern = str_replace(" ", "%20", $chapter_url_pattern);
 
 echo "$text\n";
 echo str_repeat('-', strlen($text))."\n";

@@ -42,7 +42,7 @@ class App {
 	private function parse_search() {
 		$search = $this->search;
 
-		$search_url = "http://www.webtoons.com/search?keyword=$search";
+		$search_url = Config::$baseurl."/search?keyword=$search";
 		$search_resp = $this->request->get($search_url, array(), $this->opts);
 		$search_dom = new Crawler($search_resp->getContent());
 
@@ -55,12 +55,12 @@ class App {
 		$this->result = array();
 		$search_dom->filter(".search .card_lst li a")->each(function ($a) {
 			$text = $a->filter('.subj')->text();
-			$url = "http://www.webtoons.com".$a->attr('href');
+			$url = Config::$baseurl.$a->attr('href');
 			$this->result[] = array($text, $url);
 		});
 		$search_dom->filter(".search .challenge_lst li a")->each(function ($a) {
 			$text = $a->filter('.subj')->text();
-			$url = "http://www.webtoons.com".$a->attr('href');
+			$url = Config::$baseurl.$a->attr('href');
 			$this->result[] = array($text, $url);
 		});
 	}
@@ -107,6 +107,7 @@ class App {
 		$last_chapter = $comic_dom->filter('#_listUl a')->first();
 		$chapter_max = str_replace('#', '', $last_chapter->filter('.tx')->text());
 		$chapter_url_pattern = str_replace("episode_no=$chapter_max", "episode_no=:CHAPTER:", $last_chapter->attr('href'));
+		$chapter_url_pattern = str_replace(" ", "%20", $chapter_url_pattern);
 
 		$this->chapter_max = $chapter_max;
 		$this->chapter_url_pattern = $chapter_url_pattern;

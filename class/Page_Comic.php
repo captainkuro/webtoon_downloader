@@ -38,6 +38,7 @@ class Page_Comic {
 			$lastChapter = $dom->filter('#_listUl a')->first();
 			$this->chapterMax = str_replace('#', '', $lastChapter->filter('.tx')->text());
 			$this->chapterUrlPattern = str_replace("episode_no={$this->chapterMax}", "episode_no=:CHAPTER:", $lastChapter->attr('href'));
+			$this->chapterUrlPattern = str_replace(" ", "%20", $this->chapterUrlPattern);
 		}
 	}
 

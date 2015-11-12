@@ -10,7 +10,7 @@ class WebtoonScraper {
 	public function run() {
 		$search = $this->cli->promptSearch();
 
-		$searchPage = new Page_Search($search, Config::$opts);
+		$searchPage = new Page_Search($search, Config::$baseurl, Config::$opts);
 		$result = $searchPage->getResultPages();
 
 		$comicPage = $this->cli->promptChoice($result);

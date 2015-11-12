@@ -9,9 +9,10 @@ class Page_Search {
 	private $request;
 	private $result;
 
-	public function __construct($search, $opts = array(), $request = null) {
+	public function __construct($search, $baseUrl, $opts = array(), $request = null) {
 		$this->search = $search;
 		$this->opts = $opts;
+		$this->baseUrl = $baseUrl;
 		if (is_null($request)) {
 			$request = new Request();
 		}
@@ -19,7 +20,7 @@ class Page_Search {
 	}
 
 	public function getResultPages() {
-		$searchUrl = "http://www.webtoons.com/search?keyword={$this->search}";
+		$searchUrl = $this->baseUrl."/search?keyword={$this->search}";
 		$searchResp = $this->request->get($searchUrl, array(), $this->opts);
 		$searchDom = new Crawler($searchResp->getContent());
 
@@ -32,12 +33,12 @@ class Page_Search {
 		$this->result = array();
 		$searchDom->filter(".search .card_lst li a")->each(function ($a) {
 			$text = $a->filter('.subj')->text();
-			$url = "http://www.webtoons.com".$a->attr('href');
+			$url = $this->baseUrl.$a->attr('href');
 			$this->result[] = new Page_Comic($text, $url, $this->opts, $this->request);
 		});
 		$searchDom->filter(".search .challenge_lst li a")->each(function ($a) {
 			$text = $a->filter('.subj')->text();
-			$url = "http://www.webtoons.com".$a->attr('href');
+			$url = $this->baseUrl.$a->attr('href');
 			$this->result[] = new Page_Comic($text, $url, $this->opts, $this->request);
 		});
 		return $this->result;
